@@ -44,10 +44,10 @@ body {
   left: 8px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: clamp(1.65rem, 2.2vw, 2.2rem);
+  font-size: clamp(1.05rem, 1.45vw, 1.45rem);
   line-height: 1;
   font-weight: 800;
-  letter-spacing: 0.015em;
+  letter-spacing: 0.01em;
   white-space: nowrap;
   color: #b88914;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
@@ -80,6 +80,12 @@ body {
   min-height: 84px;
   position: relative;
   z-index: 20;
+}
+
+@media (min-width: 768px) {
+  .nav-row {
+    padding-left: clamp(220px, 24vw, 350px);
+  }
 }
 
 @media (max-width: 767px) {
