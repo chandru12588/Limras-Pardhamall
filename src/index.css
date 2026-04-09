@@ -59,15 +59,11 @@ body {
 }
 
 .bismillah-nav-center {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
   text-align: center;
-  font-size: 0.58rem;
+  font-size: 0.78rem;
   font-weight: 900;
   letter-spacing: 0.04em;
-  line-height: 1.05;
+  line-height: 1;
   text-transform: uppercase;
   white-space: nowrap;
   background: linear-gradient(90deg, #7a5710 0%, #c9971d 25%, #ffe08a 50%, #c9971d 75%, #7a5710 100%);
@@ -78,20 +74,11 @@ body {
   text-shadow: 0 0 8px rgba(212, 175, 55, 0.45), 0 0 16px rgba(212, 175, 55, 0.28);
   animation: bismillahGlow 2.8s ease-in-out infinite, bismillahShine 4.2s linear infinite;
   pointer-events: none;
-  z-index: 30;
 }
 
 @media (min-width: 768px) {
   .bismillah-nav-center {
     font-size: 0.78rem;
-  }
-}
-
-@media (max-width: 767px) {
-  .bismillah-nav-center {
-    top: 9px;
-    transform: translateX(-50%);
-    font-size: 0.5rem;
   }
 }
 

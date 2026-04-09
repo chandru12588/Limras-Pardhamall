@@ -10,10 +10,8 @@ export default function Navbar({ setCurrentPage, cartCount = 0, auth, isAdmin = 
       <div className="jazak-corner" aria-label="Blessing text">
         Jazaka Allahu Khairan
       </div>
-      <div className="bismillah-nav-center" aria-label="Center blessing text">
-        Bismillahir Rahmanir Rahim
-      </div>
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
+      <div className="max-w-7xl mx-auto px-4 py-3">
+        <div className="flex items-center justify-between md:grid md:grid-cols-[auto_1fr_auto] md:items-center md:gap-6">
         <div
           className="flex items-center gap-3 md:gap-4 cursor-pointer brand-block"
           onClick={() => {
@@ -32,7 +30,13 @@ export default function Navbar({ setCurrentPage, cartCount = 0, auth, isAdmin = 
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="hidden md:flex justify-center">
+          <div className="bismillah-nav-center" aria-label="Center blessing text">
+            Bismillahir Rahmanir Rahim
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 md:justify-self-end">
           <div className="hidden md:flex gap-6 text-base font-medium">
             <button onClick={() => setCurrentPage("home")} className="hover:text-green-700">
               Home
@@ -45,7 +49,7 @@ export default function Navbar({ setCurrentPage, cartCount = 0, auth, isAdmin = 
             </button>
           </div>
 
-          <button onClick={() => setCurrentPage("cart")} className="relative text-2xl" aria-label="Open cart">
+          <button onClick={() => setCurrentPage("cart")} className="relative text-2xl leading-none flex items-center" aria-label="Open cart">
             {"\u{1F6D2}"}
             {cartCount > 0 && (
               <span className="absolute -top-2 -right-3 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
@@ -70,6 +74,7 @@ export default function Navbar({ setCurrentPage, cartCount = 0, auth, isAdmin = 
           <button className="md:hidden text-2xl" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
             {menuOpen ? <FaTimes /> : <FaBars />}
           </button>
+        </div>
         </div>
       </div>
 
