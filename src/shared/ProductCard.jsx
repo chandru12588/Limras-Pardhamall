@@ -2,7 +2,7 @@ import React from "react";
 import fallbackImage from "../assets/logo.png";
 
 export default function ProductCard({ product, addToCart }) {
-  const imageSrc = product.imageUrl || product.img || "https://via.placeholder.com/400x500?text=No+Image";
+  const imageSrc = product.imageUrl || product.img || "https://placehold.co/400x500?text=No+Image";
   const videoSrc = product.videoUrl || "";
   const available = product.available !== false;
 

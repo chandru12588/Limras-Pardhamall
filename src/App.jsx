@@ -7,6 +7,7 @@ import Contact from "./pages/contact";
 import Cart from "./pages/cart";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
+import allahBg from "./assets/allah-bg.png";
 
 const LEGACY_ADMIN_EMAIL = "chandru.jerry@gmail.com";
 
@@ -79,7 +80,7 @@ export default function App() {
     <div
       className="min-h-screen flex flex-col"
       style={{
-        backgroundImage: "url('/src/assets/allah-bg.png')",
+        backgroundImage: `url('${allahBg}')`,
         backgroundRepeat: "repeat",
         backgroundSize: "auto",
       }}
