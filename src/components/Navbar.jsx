@@ -35,7 +35,7 @@ export default function Navbar({ setCurrentPage, cartCount = 0, auth, isAdmin = 
           </div>
 
           <button onClick={() => setCurrentPage("cart")} className="relative text-2xl" aria-label="Open cart">
-            Cart
+            {"\u{1F6D2}"}
             {cartCount > 0 && (
               <span className="absolute -top-2 -right-3 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
                 {cartCount}
