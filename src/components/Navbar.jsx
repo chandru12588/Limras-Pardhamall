@@ -10,13 +10,33 @@ export default function Navbar({ setCurrentPage, cartCount = 0, auth, isAdmin = 
       <div className="jazak-mobile md:hidden" aria-label="Blessing text">
         Jazaka Allahu Khairan
       </div>
-      <div className="hidden md:block jazak-corner" aria-label="Blessing text">
-        Jazaka Allahu Khairan
-      </div>
       <div className="max-w-7xl mx-auto px-4 py-3 relative">
         <div className="flex items-center justify-between nav-row">
+          <div className="hidden md:flex items-center gap-4">
+            <div className="jazak-corner" aria-label="Blessing text">
+              Jazaka Allahu Khairan
+            </div>
+            <div
+              className="flex items-center gap-3 md:gap-4 cursor-pointer brand-block"
+              onClick={() => {
+                setCurrentPage("home");
+                setMenuOpen(false);
+              }}
+            >
+              <img
+                src={logo}
+                alt="Limras Pardha Mall Logo"
+                className="h-14 w-14 md:h-20 md:w-20 object-contain rounded-full brand-logo"
+              />
+              <div className="leading-tight">
+                <div className="text-xl md:text-3xl font-extrabold tracking-wide brand-title">Limras</div>
+                <div className="text-sm md:text-base text-green-700 font-semibold brand-subtitle">Pardha Mall</div>
+              </div>
+            </div>
+          </div>
+
           <div
-            className="flex items-center gap-3 md:gap-4 cursor-pointer brand-block"
+            className="flex items-center gap-3 md:gap-4 cursor-pointer brand-block md:hidden"
             onClick={() => {
               setCurrentPage("home");
               setMenuOpen(false);
