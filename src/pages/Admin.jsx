@@ -2,49 +2,60 @@ import React, { useEffect, useState } from "react";
 
 const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
 
+const initialForm = {
+  title: "",
+  category: "burkha",
+  price: "",
+  imageUrl: "",
+  available: true,
+};
+
 export default function Admin({ user, token }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [serverMessage, setServerMessage] = useState("");
+
   const [stats, setStats] = useState({ totalUsers: 0, totalAdmins: 0 });
   const [users, setUsers] = useState([]);
 
-  const loadAdminData = async () => {
+  const [products, setProducts] = useState([]);
+  const [form, setForm] = useState(initialForm);
+  const [editProductId, setEditProductId] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const authHeaders = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+
+  const fetchAdminData = async () => {
     setLoading(true);
     setError("");
 
     try {
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      };
-
-      const [pingRes, usersRes] = await Promise.all([
-        fetch(`${API_BASE}/api/admin/ping`, { method: "GET", headers }),
-        fetch(`${API_BASE}/api/admin/users`, { method: "GET", headers }),
+      const [pingRes, usersRes, productsRes] = await Promise.all([
+        fetch(`${API_BASE}/api/admin/ping`, { method: "GET", headers: authHeaders }),
+        fetch(`${API_BASE}/api/admin/users`, { method: "GET", headers: authHeaders }),
+        fetch(`${API_BASE}/api/admin/products`, { method: "GET", headers: authHeaders }),
       ]);
 
       const pingData = await pingRes.json();
       const usersData = await usersRes.json();
+      const productsData = await productsRes.json();
 
-      if (!pingRes.ok) {
-        setError(pingData?.error || "Admin verification failed.");
-        return;
-      }
-
-      if (!usersRes.ok) {
-        setError(usersData?.error || "Unable to load admin users.");
-        return;
-      }
+      if (!pingRes.ok) throw new Error(pingData?.error || "Admin verification failed.");
+      if (!usersRes.ok) throw new Error(usersData?.error || "Unable to load users.");
+      if (!productsRes.ok) throw new Error(productsData?.error || "Unable to load products.");
 
       setServerMessage(pingData?.message || "Admin access verified.");
+      setUsers(Array.isArray(usersData?.users) ? usersData.users : []);
       setStats({
         totalUsers: usersData?.totalUsers || 0,
         totalAdmins: usersData?.totalAdmins || 0,
       });
-      setUsers(Array.isArray(usersData?.users) ? usersData.users : []);
-    } catch {
-      setError("Backend is not reachable. Start limras-backend and refresh.");
+      setProducts(Array.isArray(productsData?.products) ? productsData.products : []);
+    } catch (err) {
+      setError(err.message || "Unable to load admin data.");
     } finally {
       setLoading(false);
     }
@@ -56,12 +67,97 @@ export default function Admin({ user, token }) {
       setLoading(false);
       return;
     }
-    loadAdminData();
+    fetchAdminData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  const resetForm = () => {
+    setForm(initialForm);
+    setEditProductId("");
+  };
+
+  const submitProduct = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+
+    try {
+      const payload = {
+        title: form.title,
+        category: form.category,
+        price: Number(form.price),
+        imageUrl: form.imageUrl,
+        available: Boolean(form.available),
+      };
+
+      const endpoint = editProductId
+        ? `${API_BASE}/api/admin/products/${editProductId}`
+        : `${API_BASE}/api/admin/products`;
+
+      const res = await fetch(endpoint, {
+        method: editProductId ? "PUT" : "POST",
+        headers: authHeaders,
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data?.error || "Unable to save product.");
+
+      await fetchAdminData();
+      resetForm();
+    } catch (err) {
+      setError(err.message || "Unable to save product.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const startEditProduct = (product) => {
+    setEditProductId(product.id);
+    setForm({
+      title: product.title || "",
+      category: product.category || "burkha",
+      price: String(product.price ?? ""),
+      imageUrl: product.imageUrl || "",
+      available: product.available !== false,
+    });
+  };
+
+  const removeProduct = async (id) => {
+    const confirmed = window.confirm("Delete this product?");
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/products/${id}`, {
+        method: "DELETE",
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Unable to delete product.");
+      await fetchAdminData();
+      if (editProductId === id) resetForm();
+    } catch (err) {
+      setError(err.message || "Unable to delete product.");
+    }
+  };
+
+  const toggleAvailability = async (product) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/products/${product.id}`, {
+        method: "PUT",
+        headers: authHeaders,
+        body: JSON.stringify({ ...product, available: !product.available }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Unable to update availability.");
+      await fetchAdminData();
+    } catch (err) {
+      setError(err.message || "Unable to update availability.");
+    }
+  };
+
   return (
-    <section className="max-w-5xl mx-auto px-4 py-8">
+    <section className="max-w-6xl mx-auto px-4 py-8">
       <div className="bg-white/90 rounded-2xl shadow-lg p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
@@ -71,7 +167,7 @@ export default function Admin({ user, token }) {
             </p>
           </div>
           <button
-            onClick={loadAdminData}
+            onClick={fetchAdminData}
             className="bg-black hover:bg-gray-900 text-white px-4 py-2 rounded-lg shadow text-sm"
             disabled={loading}
           >
@@ -79,11 +175,13 @@ export default function Admin({ user, token }) {
           </button>
         </div>
 
-        {error ? (
+        {error && (
           <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
             <p className="text-red-700 font-medium">{error}</p>
           </div>
-        ) : (
+        )}
+
+        {!error && (
           <>
             <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4">
               <p className="text-green-800 font-medium">Admin mode is active.</p>
@@ -101,7 +199,129 @@ export default function Admin({ user, token }) {
               </div>
             </div>
 
-            <div className="mt-6 rounded-xl border bg-white overflow-hidden">
+            <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="rounded-xl border bg-white p-4">
+                <h2 className="text-lg font-semibold text-gray-900">Add / Edit Product</h2>
+                <form onSubmit={submitProduct} className="mt-4 space-y-3">
+                  <input
+                    value={form.title}
+                    onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+                    placeholder="Product title"
+                    className="w-full border rounded-lg px-3 py-2"
+                    required
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <select
+                      value={form.category}
+                      onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2"
+                      required
+                    >
+                      <option value="burkha">Burkha</option>
+                      <option value="hijab">Hijab</option>
+                      <option value="shawl">Shawl</option>
+                      <option value="other">Other</option>
+                    </select>
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.price}
+                      onChange={(e) => setForm((prev) => ({ ...prev, price: e.target.value }))}
+                      placeholder="Price"
+                      className="w-full border rounded-lg px-3 py-2"
+                      required
+                    />
+                  </div>
+
+                  <input
+                    value={form.imageUrl}
+                    onChange={(e) => setForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
+                    placeholder="Image URL (https://...)"
+                    className="w-full border rounded-lg px-3 py-2"
+                  />
+
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={form.available}
+                      onChange={(e) => setForm((prev) => ({ ...prev, available: e.target.checked }))}
+                    />
+                    Available for customers
+                  </label>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg"
+                      disabled={saving}
+                    >
+                      {saving ? "Saving..." : editProductId ? "Update Product" : "Add Product"}
+                    </button>
+                    {editProductId && (
+                      <button
+                        type="button"
+                        onClick={resetForm}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg"
+                      >
+                        Cancel Edit
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+              <div className="rounded-xl border bg-white p-4 overflow-auto">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">Products</h2>
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 text-left">
+                    <tr>
+                      <th className="px-3 py-2">Title</th>
+                      <th className="px-3 py-2">Category</th>
+                      <th className="px-3 py-2">Price</th>
+                      <th className="px-3 py-2">Available</th>
+                      <th className="px-3 py-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((product) => (
+                      <tr key={product.id} className="border-t">
+                        <td className="px-3 py-2">{product.title}</td>
+                        <td className="px-3 py-2">{product.category}</td>
+                        <td className="px-3 py-2">Rs {product.price}</td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="checkbox"
+                            checked={product.available !== false}
+                            onChange={() => toggleAvailability(product)}
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => startEditProduct(product)}
+                              className="text-blue-700 hover:underline"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeProduct(product.id)}
+                              className="text-red-700 hover:underline"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="mt-8 rounded-xl border bg-white overflow-hidden">
               <div className="px-4 py-3 border-b bg-gray-50">
                 <h2 className="text-sm font-semibold text-gray-700">Registered users</h2>
               </div>

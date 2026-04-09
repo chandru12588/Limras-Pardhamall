@@ -1,43 +1,64 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import FlashSlider from "../components/FlashSlider";
 import ProductCard from "../shared/ProductCard";
 
-import img5 from "../assets/img5.jpeg";
-import img1 from "../assets/img1.jpg";
-import img6 from "../assets/img6.jpg";
-import hijab1 from "../assets/hijab1.jpg";
-import hijab2 from "../assets/Hijab2.jpg";
-import hijab3 from "../assets/Hijab3.jpg";
-import shawl1 from "../assets/shall1.jpg";
-import shawl2 from "../assets/shall2.jpg";
-import shawl3 from "../assets/shall3.jpeg";
+const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
 
 export default function Home({ addToCart }) {
   const [search, setSearch] = useState("");
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const burkha = [
-    { id: "b1", title: "Classic Black Burkha", price: 1200, img: img5 },
-    { id: "b2", title: "Designer Burkha", price: 1800, img: img1 },
-    { id: "b3", title: "Premium Embroidery Burkha", price: 2500, img: img6 },
-  ];
+  useEffect(() => {
+    let active = true;
 
-  const hijabs = [
-    { id: "h1", title: "Elegant Hijab Adult", price: 600, img: hijab1 },
-    { id: "h2", title: "Kids Hijab", price: 350, img: hijab2 },
-    { id: "h3", title: "Kids Hijab 2", price: 350, img: hijab3 },
-  ];
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const res = await fetch(`${API_BASE}/api/products`);
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.error || "Unable to load products.");
+        }
+        if (active) setProducts(Array.isArray(data?.products) ? data.products : []);
+      } catch (err) {
+        if (active) setError(err.message || "Unable to load products.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
 
-  const shawls = [
-    { id: "s1", title: "Plain Shawl", price: 450, img: shawl1 },
-    { id: "s2", title: "Designer Shawl 1", price: 750, img: shawl2 },
-    { id: "s3", title: "Designer Shawl 2", price: 750, img: shawl3 },
-  ];
+    loadProducts();
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const allProducts = [...burkha, ...hijabs, ...shawls];
+  const filteredProducts = useMemo(() => {
+    if (!search.trim()) return products;
+    return products.filter((item) => item.title.toLowerCase().includes(search.trim().toLowerCase()));
+  }, [products, search]);
 
-  const filtered = allProducts.filter(p => p.title.toLowerCase().includes(search.toLowerCase()));
+  const grouped = useMemo(() => {
+    return {
+      burkha: filteredProducts.filter((product) => product.category === "burkha"),
+      hijab: filteredProducts.filter((product) => product.category === "hijab"),
+      shawl: filteredProducts.filter((product) => product.category === "shawl"),
+      other: filteredProducts.filter((product) => !["burkha", "hijab", "shawl"].includes(product.category)),
+    };
+  }, [filteredProducts]);
 
-  const handleAdd = (p) => addToCart(p);
+  const renderGrid = (items) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center place-items-center">
+      {items.map((product) => (
+        <div key={product.id} className="w-[320px]">
+          <ProductCard product={product} addToCart={addToCart} />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4">
@@ -46,49 +67,54 @@ export default function Home({ addToCart }) {
       <div className="my-6 max-w-3xl mx-auto">
         <input
           value={search}
-          onChange={(e)=>setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           placeholder="Search burkha, hijab, shawl..."
           className="w-full border p-3 rounded-lg bg-white"
         />
       </div>
 
-      {/* Search results */}
-      {search.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center place-items-center">
-          {filtered.map(p=>(
-            <div key={p.id} className="w-[320px]">
-              <ProductCard product={p} addToCart={handleAdd} />
-            </div>
-          ))}
-        </div>
-      ) : (
+      {loading && <p className="text-center text-white font-medium">Loading products...</p>}
+      {error && <p className="text-center text-red-200 font-medium">{error}</p>}
+
+      {!loading && !error && (
         <>
-          <h2 className="text-3xl text-center font-bold mt-8 mb-6 text-white drop-shadow-md">Burkha Collection</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center place-items-center">
-            {burkha.map(p=>(
-              <div key={p.id} className="w-[320px]">
-                <ProductCard product={p} addToCart={handleAdd} />
-              </div>
-            ))}
-          </div>
+          {search.trim() ? (
+            filteredProducts.length === 0 ? (
+              <p className="text-center text-white font-medium">No products found.</p>
+            ) : (
+              renderGrid(filteredProducts)
+            )
+          ) : (
+            <>
+              {grouped.burkha.length > 0 && (
+                <>
+                  <h2 className="text-3xl text-center font-bold mt-8 mb-6 text-white drop-shadow-md">Burkha Collection</h2>
+                  {renderGrid(grouped.burkha)}
+                </>
+              )}
 
-          <h2 className="text-3xl text-center font-bold mt-12 mb-6 text-white drop-shadow-md">Hijab Collection</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center place-items-center">
-            {hijabs.map(p=>(
-              <div key={p.id} className="w-[320px]">
-                <ProductCard product={p} addToCart={handleAdd} />
-              </div>
-            ))}
-          </div>
+              {grouped.hijab.length > 0 && (
+                <>
+                  <h2 className="text-3xl text-center font-bold mt-12 mb-6 text-white drop-shadow-md">Hijab Collection</h2>
+                  {renderGrid(grouped.hijab)}
+                </>
+              )}
 
-          <h2 className="text-3xl text-center font-bold mt-12 mb-6 text-white drop-shadow-md">Shawl Collection</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center place-items-center mb-12">
-            {shawls.map(p=>(
-              <div key={p.id} className="w-[320px]">
-                <ProductCard product={p} addToCart={handleAdd} />
-              </div>
-            ))}
-          </div>
+              {grouped.shawl.length > 0 && (
+                <>
+                  <h2 className="text-3xl text-center font-bold mt-12 mb-6 text-white drop-shadow-md">Shawl Collection</h2>
+                  <div className="mb-12">{renderGrid(grouped.shawl)}</div>
+                </>
+              )}
+
+              {grouped.other.length > 0 && (
+                <>
+                  <h2 className="text-3xl text-center font-bold mt-12 mb-6 text-white drop-shadow-md">More Products</h2>
+                  <div className="mb-12">{renderGrid(grouped.other)}</div>
+                </>
+              )}
+            </>
+          )}
         </>
       )}
     </div>
