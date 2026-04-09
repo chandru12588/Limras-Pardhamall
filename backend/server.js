@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { MongoClient } from "mongodb";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,6 +11,13 @@ const USERS_FILE = path.join(__dirname, "data", "users.json");
 const PORT = Number(process.env.PORT) || 8787;
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 const TOKEN_SECRET = process.env.AUTH_SECRET || "limras-local-auth-secret";
+const MONGODB_URI = process.env.MONGODB_URI || "";
+const MONGODB_DB = process.env.MONGODB_DB || "limras_auth";
+const USERS_COLLECTION = process.env.MONGODB_USERS_COLLECTION || "users";
+const STORAGE_MODE = MONGODB_URI ? "mongo" : "file";
+
+let mongoClient = null;
+let usersCollection = null;
 
 function json(res, statusCode, payload) {
   res.writeHead(statusCode, {
@@ -57,6 +65,44 @@ async function writeUsers(users) {
   await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2), "utf8");
 }
 
+async function initStorage() {
+  if (STORAGE_MODE !== "mongo") return;
+
+  mongoClient = new MongoClient(MONGODB_URI);
+  await mongoClient.connect();
+  const db = mongoClient.db(MONGODB_DB);
+  usersCollection = db.collection(USERS_COLLECTION);
+  await usersCollection.createIndex({ email: 1 }, { unique: true });
+}
+
+async function findUserByEmail(email) {
+  if (STORAGE_MODE === "mongo") {
+    return usersCollection.findOne({ email });
+  }
+  const users = await readUsers();
+  return users.find((u) => u.email === email) || null;
+}
+
+async function createUser({ name, email, passwordHash }) {
+  const user = {
+    id: crypto.randomUUID(),
+    name,
+    email,
+    passwordHash,
+    createdAt: new Date().toISOString(),
+  };
+
+  if (STORAGE_MODE === "mongo") {
+    await usersCollection.insertOne(user);
+    return user;
+  }
+
+  const users = await readUsers();
+  users.push(user);
+  await writeUsers(users);
+  return user;
+}
+
 function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
   const hash = crypto.pbkdf2Sync(password, salt, 100_000, 64, "sha512").toString("hex");
   return `${salt}:${hash}`;
@@ -102,7 +148,7 @@ const server = http.createServer(async (req, res) => {
 
   try {
     if (req.url === "/api/health" && req.method === "GET") {
-      return json(res, 200, { ok: true, service: "limras-auth" });
+      return json(res, 200, { ok: true, service: "limras-auth", storage: STORAGE_MODE });
     }
 
     if (req.url === "/api/auth/register" && req.method === "POST") {
@@ -116,21 +162,16 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
-      const users = await readUsers();
-      if (users.some((u) => u.email === cleanEmail)) {
+      const existingUser = await findUserByEmail(cleanEmail);
+      if (existingUser) {
         return json(res, 409, { error: "Email already registered." });
       }
 
-      const id = crypto.randomUUID();
-      const user = {
-        id,
+      const user = await createUser({
         name: cleanName,
         email: cleanEmail,
         passwordHash: hashPassword(password),
-        createdAt: new Date().toISOString(),
-      };
-      users.push(user);
-      await writeUsers(users);
+      });
 
       const token = signToken({ id: user.id, email: user.email, name: user.name });
       return json(res, 201, {
@@ -142,8 +183,7 @@ const server = http.createServer(async (req, res) => {
     if (req.url === "/api/auth/login" && req.method === "POST") {
       const { email = "", password = "" } = await parseBody(req);
       const cleanEmail = email.trim().toLowerCase();
-      const users = await readUsers();
-      const user = users.find((u) => u.email === cleanEmail);
+      const user = await findUserByEmail(cleanEmail);
       if (!user || !verifyPassword(password, user.passwordHash)) {
         return json(res, 401, { error: "Invalid email or password." });
       }
@@ -168,6 +208,14 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`Limras backend running on http://localhost:${PORT}`);
+async function start() {
+  await initStorage();
+  server.listen(PORT, () => {
+    console.log(`Limras backend running on http://localhost:${PORT} (storage: ${STORAGE_MODE})`);
+  });
+}
+
+start().catch((err) => {
+  console.error("Failed to start backend:", err);
+  process.exit(1);
 });
