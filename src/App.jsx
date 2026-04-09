@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Order from "./pages/Order";
 import Contact from "./pages/contact";
 import Cart from "./pages/cart";
+import Login from "./pages/Login";
 
 /**
  * App holds cart and page state and passes add/remove handlers.
@@ -12,6 +13,16 @@ import Cart from "./pages/cart";
 export default function App() {
   const [currentPage, setCurrentPage] = useState("home");
   const [cart, setCart] = useState([]); // items: { id, title, price, img, quantity }
+  const [auth, setAuth] = useState(() => {
+    const token = localStorage.getItem("limras_auth_token");
+    const userRaw = localStorage.getItem("limras_auth_user");
+    if (!token || !userRaw) return null;
+    try {
+      return { token, user: JSON.parse(userRaw) };
+    } catch {
+      return null;
+    }
+  });
 
   const addToCart = (product) => {
     setCart((prev) => {
@@ -25,12 +36,26 @@ export default function App() {
 
   const removeFromCart = (id) => setCart((prev) => prev.filter((p) => p.id !== id));
   const clearCart = () => setCart([]);
+  const handleAuthSuccess = ({ token, user }) => {
+    if (!token || !user) return;
+    localStorage.setItem("limras_auth_token", token);
+    localStorage.setItem("limras_auth_user", JSON.stringify(user));
+    setAuth({ token, user });
+    setCurrentPage("home");
+  };
+
+  const logout = () => {
+    localStorage.removeItem("limras_auth_token");
+    localStorage.removeItem("limras_auth_user");
+    setAuth(null);
+  };
 
   const pages = {
     home: <Home addToCart={addToCart} />,
     order: <Order addToCart={addToCart} />,
     contact: <Contact />,
-    cart: <Cart cart={cart} removeFromCart={removeFromCart} clearCart={clearCart} />
+    cart: <Cart cart={cart} removeFromCart={removeFromCart} clearCart={clearCart} />,
+    login: <Login onAuthSuccess={handleAuthSuccess} />,
   };
 
   return (
@@ -47,6 +72,20 @@ export default function App() {
       <main className="flex-1">
         {pages[currentPage] || pages.home}
       </main>
+
+      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
+        {auth?.user?.name && (
+          <span className="hidden sm:inline-block bg-white/90 px-3 py-2 rounded-lg shadow text-sm">
+            {auth.user.name}
+          </span>
+        )}
+        <button
+          onClick={() => (auth ? logout() : setCurrentPage("login"))}
+          className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg shadow"
+        >
+          {auth ? "Logout" : "Login"}
+        </button>
+      </div>
 
       <Footer />
     </div>
