@@ -37,7 +37,7 @@ export default function Login({ onAuthSuccess }) {
       setMessage(mode === "register" ? "Account created successfully." : "Login successful.");
       onAuthSuccess?.(data);
     } catch {
-      setError("Backend is not reachable. Start it with: npm run backend");
+      setError("Backend is not reachable. Start limras-backend with: npm run start");
     } finally {
       setLoading(false);
     }

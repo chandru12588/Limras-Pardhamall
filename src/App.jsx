@@ -8,7 +8,7 @@ import Cart from "./pages/cart";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 
-const ADMIN_EMAIL = "chandru.jerry@gmail.com";
+const LEGACY_ADMIN_EMAIL = "chandru.jerry@gmail.com";
 
 /**
  * App holds cart and page state and passes add/remove handlers.
@@ -53,7 +53,11 @@ export default function App() {
     setAuth(null);
   };
 
-  const isAdmin = auth?.user?.email?.toLowerCase?.() === ADMIN_EMAIL;
+  const isAdmin = Boolean(
+    auth?.user?.isAdmin
+    || auth?.user?.role === "admin"
+    || auth?.user?.email?.toLowerCase?.() === LEGACY_ADMIN_EMAIL,
+  );
 
   const pages = {
     home: <Home addToCart={addToCart} />,
