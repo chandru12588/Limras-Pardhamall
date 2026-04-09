@@ -104,6 +104,10 @@ export default function Admin({ user, token }) {
     setError("");
 
     try {
+      if (!String(form.imageUrl || "").trim()) {
+        throw new Error("Please upload a product image.");
+      }
+
       const payload = {
         title: form.title,
         category: form.category,
@@ -379,19 +383,6 @@ export default function Admin({ user, token }) {
                     />
                   </div>
 
-                  <input
-                    value={form.imageUrl}
-                    onChange={(e) => setForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                    placeholder="Image URL (https://...)"
-                    className="w-full border rounded-lg px-3 py-2"
-                  />
-                  <input
-                    value={form.videoUrl}
-                    onChange={(e) => setForm((prev) => ({ ...prev, videoUrl: e.target.value }))}
-                    placeholder="Video URL (https://...)"
-                    className="w-full border rounded-lg px-3 py-2"
-                  />
-
                   <div className="flex items-center gap-2">
                     <input ref={imageInputRef} type="file" accept="image/*" onChange={(e) => uploadMediaFile(e, "image")} className="hidden" />
                     <input ref={videoInputRef} type="file" accept="video/*" onChange={(e) => uploadMediaFile(e, "video")} className="hidden" />
@@ -411,7 +402,7 @@ export default function Admin({ user, token }) {
                     >
                       {uploadingVideo ? "Uploading..." : "Upload Video"}
                     </button>
-                    <span className="text-xs text-gray-500">upload to Cloudinary or paste URL</span>
+                    <span className="text-xs text-gray-500">Upload files only. URLs are disabled for safety.</span>
                   </div>
 
                   {form.imageUrl && (
