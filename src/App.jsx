@@ -65,7 +65,7 @@ export default function App() {
     contact: <Contact />,
     cart: <Cart cart={cart} removeFromCart={removeFromCart} clearCart={clearCart} />,
     login: <Login onAuthSuccess={handleAuthSuccess} />,
-    admin: isAdmin ? <Admin user={auth?.user} /> : <Home addToCart={addToCart} />,
+    admin: isAdmin ? <Admin user={auth?.user} token={auth?.token} /> : <Home addToCart={addToCart} />,
   };
 
   return (
