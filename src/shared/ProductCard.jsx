@@ -1,4 +1,5 @@
 import React from "react";
+import fallbackImage from "../assets/logo.png";
 
 export default function ProductCard({ product, addToCart }) {
   const imageSrc = product.imageUrl || product.img || "https://via.placeholder.com/400x500?text=No+Image";
@@ -11,7 +12,14 @@ export default function ProductCard({ product, addToCart }) {
         {videoSrc ? (
           <video src={videoSrc} className="w-full h-full object-contain" controls muted />
         ) : (
-          <img src={imageSrc} alt={product.title} className="w-full h-full object-contain" />
+          <img
+            src={imageSrc}
+            alt={product.title}
+            className="w-full h-full object-contain"
+            onError={(event) => {
+              event.currentTarget.src = fallbackImage;
+            }}
+          />
         )}
       </div>
 
