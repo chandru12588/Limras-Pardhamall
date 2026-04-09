@@ -7,6 +7,7 @@ const initialForm = {
   category: "burkha",
   price: "",
   imageUrl: "",
+  videoUrl: "",
   available: true,
 };
 
@@ -27,7 +28,9 @@ export default function Admin({ user, token }) {
   const [editProductId, setEditProductId] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const fileInputRef = useRef(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const imageInputRef = useRef(null);
+  const videoInputRef = useRef(null);
 
   const authHeaders = {
     "Content-Type": "application/json",
@@ -106,6 +109,7 @@ export default function Admin({ user, token }) {
         category: form.category,
         price: Number(form.price),
         imageUrl: form.imageUrl,
+        videoUrl: form.videoUrl,
         available: Boolean(form.available),
       };
 
@@ -136,20 +140,26 @@ export default function Admin({ user, token }) {
       category: product.category || "burkha",
       price: String(product.price ?? ""),
       imageUrl: product.imageUrl || "",
+      videoUrl: product.videoUrl || "",
       available: product.available !== false,
     });
   };
 
-  const uploadImageFile = async (event) => {
+  const uploadMediaFile = async (event, kind) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
+    if (kind === "image" && !file.type.startsWith("image/")) {
       setError("Please choose an image file.");
       return;
     }
+    if (kind === "video" && !file.type.startsWith("video/")) {
+      setError("Please choose a video file.");
+      return;
+    }
 
-    setUploadingImage(true);
+    if (kind === "image") setUploadingImage(true);
+    if (kind === "video") setUploadingVideo(true);
     setError("");
     try {
       const dataUrl = await new Promise((resolve, reject) => {
@@ -158,11 +168,29 @@ export default function Admin({ user, token }) {
         reader.onerror = () => reject(new Error("Failed to read image file."));
         reader.readAsDataURL(file);
       });
-      setForm((prev) => ({ ...prev, imageUrl: dataUrl }));
+
+      const res = await fetch(`${API_BASE}/api/admin/uploads`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          fileData: dataUrl,
+          fileName: file.name,
+          resourceType: kind,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Cloudinary upload failed.");
+
+      if (kind === "image") {
+        setForm((prev) => ({ ...prev, imageUrl: data.secureUrl || "" }));
+      } else {
+        setForm((prev) => ({ ...prev, videoUrl: data.secureUrl || "" }));
+      }
     } catch (err) {
-      setError(err.message || "Failed to upload image.");
+      setError(err.message || "Failed to upload file.");
     } finally {
-      setUploadingImage(false);
+      if (kind === "image") setUploadingImage(false);
+      if (kind === "video") setUploadingVideo(false);
     }
   };
 
@@ -357,23 +385,43 @@ export default function Admin({ user, token }) {
                     placeholder="Image URL (https://...)"
                     className="w-full border rounded-lg px-3 py-2"
                   />
+                  <input
+                    value={form.videoUrl}
+                    onChange={(e) => setForm((prev) => ({ ...prev, videoUrl: e.target.value }))}
+                    placeholder="Video URL (https://...)"
+                    className="w-full border rounded-lg px-3 py-2"
+                  />
 
                   <div className="flex items-center gap-2">
-                    <input ref={fileInputRef} type="file" accept="image/*" onChange={uploadImageFile} className="hidden" />
+                    <input ref={imageInputRef} type="file" accept="image/*" onChange={(e) => uploadMediaFile(e, "image")} className="hidden" />
+                    <input ref={videoInputRef} type="file" accept="video/*" onChange={(e) => uploadMediaFile(e, "video")} className="hidden" />
                     <button
                       type="button"
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => imageInputRef.current?.click()}
                       className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm"
                       disabled={uploadingImage}
                     >
                       {uploadingImage ? "Uploading..." : "Upload Image"}
                     </button>
-                    <span className="text-xs text-gray-500">or paste image URL above</span>
+                    <button
+                      type="button"
+                      onClick={() => videoInputRef.current?.click()}
+                      className="bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded-lg text-sm"
+                      disabled={uploadingVideo}
+                    >
+                      {uploadingVideo ? "Uploading..." : "Upload Video"}
+                    </button>
+                    <span className="text-xs text-gray-500">upload to Cloudinary or paste URL</span>
                   </div>
 
                   {form.imageUrl && (
                     <div className="rounded-lg border p-2 w-32 h-32 bg-gray-50 flex items-center justify-center">
                       <img src={form.imageUrl} alt="Preview" className="max-w-full max-h-full object-contain" />
+                    </div>
+                  )}
+                  {form.videoUrl && (
+                    <div className="rounded-lg border p-2 w-48 h-32 bg-gray-50 flex items-center justify-center">
+                      <video src={form.videoUrl} controls className="max-w-full max-h-full object-contain" />
                     </div>
                   )}
 

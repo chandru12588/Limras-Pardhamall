@@ -84,33 +84,17 @@ export default function App() {
         backgroundSize: "auto",
       }}
     >
-      <Navbar setCurrentPage={setCurrentPage} cartCount={cart.reduce((s,i)=>s+i.quantity,0)} />
+      <Navbar
+        setCurrentPage={setCurrentPage}
+        cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
+        auth={auth}
+        isAdmin={isAdmin}
+        onLogout={logout}
+      />
 
       <main className="flex-1">
         {pages[currentPage] || pages.home}
       </main>
-
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
-        {auth?.user?.name && (
-          <span className="hidden sm:inline-block bg-white/90 px-3 py-2 rounded-lg shadow text-sm">
-            {auth.user.name}
-          </span>
-        )}
-        {isAdmin && (
-          <button
-            onClick={() => setCurrentPage("admin")}
-            className="bg-black hover:bg-gray-900 text-white px-4 py-2 rounded-lg shadow"
-          >
-            Admin
-          </button>
-        )}
-        <button
-          onClick={() => (auth ? logout() : setCurrentPage("login"))}
-          className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg shadow"
-        >
-          {auth ? "Logout" : "Login"}
-        </button>
-      </div>
 
       <Footer />
     </div>
