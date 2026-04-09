@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
+
 export default function Login({ onAuthSuccess }) {
   const [mode, setMode] = useState("login");
   const [name, setName] = useState("");
@@ -16,7 +18,8 @@ export default function Login({ onAuthSuccess }) {
     setMessage("");
 
     try {
-      const endpoint = mode === "register" ? "/api/auth/register" : "/api/auth/login";
+      const endpointPath = mode === "register" ? "/api/auth/register" : "/api/auth/login";
+      const endpoint = `${API_BASE}${endpointPath}`;
       const payload = mode === "register" ? { name, email, password } : { email, password };
 
       const res = await fetch(endpoint, {
