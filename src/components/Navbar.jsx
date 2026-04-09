@@ -10,7 +10,7 @@ export default function Navbar({ setCurrentPage, cartCount = 0, auth, isAdmin = 
       <div className="jazak-mobile md:hidden" aria-label="Blessing text">
         Jazaka Allahu Khairan
       </div>
-      <div className="max-w-7xl mx-auto px-4 py-3 relative">
+      <div className="w-full px-1 md:px-2 py-3 relative">
         <div className="flex items-center justify-between nav-row">
           <div className="hidden md:flex items-center gap-4">
             <div className="jazak-corner" aria-label="Blessing text">
