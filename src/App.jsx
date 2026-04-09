@@ -6,6 +6,9 @@ import Order from "./pages/Order";
 import Contact from "./pages/contact";
 import Cart from "./pages/cart";
 import Login from "./pages/Login";
+import Admin from "./pages/Admin";
+
+const ADMIN_EMAIL = "chandru.jerry@gmail.com";
 
 /**
  * App holds cart and page state and passes add/remove handlers.
@@ -50,12 +53,15 @@ export default function App() {
     setAuth(null);
   };
 
+  const isAdmin = auth?.user?.email?.toLowerCase?.() === ADMIN_EMAIL;
+
   const pages = {
     home: <Home addToCart={addToCart} />,
     order: <Order addToCart={addToCart} />,
     contact: <Contact />,
     cart: <Cart cart={cart} removeFromCart={removeFromCart} clearCart={clearCart} />,
     login: <Login onAuthSuccess={handleAuthSuccess} />,
+    admin: isAdmin ? <Admin user={auth?.user} /> : <Home addToCart={addToCart} />,
   };
 
   return (
@@ -78,6 +84,14 @@ export default function App() {
           <span className="hidden sm:inline-block bg-white/90 px-3 py-2 rounded-lg shadow text-sm">
             {auth.user.name}
           </span>
+        )}
+        {isAdmin && (
+          <button
+            onClick={() => setCurrentPage("admin")}
+            className="bg-black hover:bg-gray-900 text-white px-4 py-2 rounded-lg shadow"
+          >
+            Admin
+          </button>
         )}
         <button
           onClick={() => (auth ? logout() : setCurrentPage("login"))}
