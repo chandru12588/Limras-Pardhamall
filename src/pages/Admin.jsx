@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
 
@@ -22,6 +22,8 @@ export default function Admin({ user, token }) {
   const [form, setForm] = useState(initialForm);
   const [editProductId, setEditProductId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
 
   const authHeaders = {
     "Content-Type": "application/json",
@@ -121,6 +123,32 @@ export default function Admin({ user, token }) {
       imageUrl: product.imageUrl || "",
       available: product.available !== false,
     });
+  };
+
+  const uploadImageFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file.");
+      return;
+    }
+
+    setUploadingImage(true);
+    setError("");
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("Failed to read image file."));
+        reader.readAsDataURL(file);
+      });
+      setForm((prev) => ({ ...prev, imageUrl: dataUrl }));
+    } catch (err) {
+      setError(err.message || "Failed to upload image.");
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const removeProduct = async (id) => {
@@ -240,6 +268,31 @@ export default function Admin({ user, token }) {
                     placeholder="Image URL (https://...)"
                     className="w-full border rounded-lg px-3 py-2"
                   />
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={uploadImageFile}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm"
+                      disabled={uploadingImage}
+                    >
+                      {uploadingImage ? "Uploading..." : "Upload Image"}
+                    </button>
+                    <span className="text-xs text-gray-500">or paste image URL above</span>
+                  </div>
+
+                  {form.imageUrl && (
+                    <div className="rounded-lg border p-2 w-32 h-32 bg-gray-50 flex items-center justify-center">
+                      <img src={form.imageUrl} alt="Preview" className="max-w-full max-h-full object-contain" />
+                    </div>
+                  )}
 
                   <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                     <input
