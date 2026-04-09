@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FaBars, FaTimes } from "react-icons/fa";
 import logo from "../assets/logo.png";
 
 export default function Navbar({ setCurrentPage, cartCount = 0, auth, isAdmin = false, onLogout }) {
@@ -60,8 +61,8 @@ export default function Navbar({ setCurrentPage, cartCount = 0, auth, isAdmin = 
             {auth ? "Logout" : "Login"}
           </button>
 
-          <button className="md:hidden text-2xl" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? "X" : "?"}
+          <button className="md:hidden text-2xl" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
+            {menuOpen ? <FaTimes /> : <FaBars />}
           </button>
         </div>
       </div>
