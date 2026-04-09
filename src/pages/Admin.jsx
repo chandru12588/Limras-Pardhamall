@@ -10,13 +10,17 @@ const initialForm = {
   available: true,
 };
 
+const ORDER_STATUSES = ["pending", "confirmed", "packed", "shipped", "delivered", "cancelled"];
+
 export default function Admin({ user, token }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [serverMessage, setServerMessage] = useState("");
 
-  const [stats, setStats] = useState({ totalUsers: 0, totalAdmins: 0 });
+  const [userStats, setUserStats] = useState({ totalUsers: 0, totalAdmins: 0 });
+  const [orderStats, setOrderStats] = useState({ totalOrders: 0, totalRevenue: 0, pendingOrders: 0, deliveredOrders: 0 });
   const [users, setUsers] = useState([]);
+  const [orders, setOrders] = useState([]);
 
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState(initialForm);
@@ -35,27 +39,40 @@ export default function Admin({ user, token }) {
     setError("");
 
     try {
-      const [pingRes, usersRes, productsRes] = await Promise.all([
+      const [pingRes, usersRes, productsRes, ordersRes, metricsRes] = await Promise.all([
         fetch(`${API_BASE}/api/admin/ping`, { method: "GET", headers: authHeaders }),
         fetch(`${API_BASE}/api/admin/users`, { method: "GET", headers: authHeaders }),
         fetch(`${API_BASE}/api/admin/products`, { method: "GET", headers: authHeaders }),
+        fetch(`${API_BASE}/api/admin/orders`, { method: "GET", headers: authHeaders }),
+        fetch(`${API_BASE}/api/admin/orders/metrics`, { method: "GET", headers: authHeaders }),
       ]);
 
       const pingData = await pingRes.json();
       const usersData = await usersRes.json();
       const productsData = await productsRes.json();
+      const ordersData = await ordersRes.json();
+      const metricsData = await metricsRes.json();
 
       if (!pingRes.ok) throw new Error(pingData?.error || "Admin verification failed.");
       if (!usersRes.ok) throw new Error(usersData?.error || "Unable to load users.");
       if (!productsRes.ok) throw new Error(productsData?.error || "Unable to load products.");
+      if (!ordersRes.ok) throw new Error(ordersData?.error || "Unable to load orders.");
+      if (!metricsRes.ok) throw new Error(metricsData?.error || "Unable to load order metrics.");
 
       setServerMessage(pingData?.message || "Admin access verified.");
       setUsers(Array.isArray(usersData?.users) ? usersData.users : []);
-      setStats({
+      setUserStats({
         totalUsers: usersData?.totalUsers || 0,
         totalAdmins: usersData?.totalAdmins || 0,
       });
       setProducts(Array.isArray(productsData?.products) ? productsData.products : []);
+      setOrders(Array.isArray(ordersData?.orders) ? ordersData.orders : []);
+      setOrderStats({
+        totalOrders: metricsData?.totalOrders || 0,
+        totalRevenue: metricsData?.totalRevenue || 0,
+        pendingOrders: metricsData?.pendingOrders || 0,
+        deliveredOrders: metricsData?.deliveredOrders || 0,
+      });
     } catch (err) {
       setError(err.message || "Unable to load admin data.");
     } finally {
@@ -92,9 +109,7 @@ export default function Admin({ user, token }) {
         available: Boolean(form.available),
       };
 
-      const endpoint = editProductId
-        ? `${API_BASE}/api/admin/products/${editProductId}`
-        : `${API_BASE}/api/admin/products`;
+      const endpoint = editProductId ? `${API_BASE}/api/admin/products/${editProductId}` : `${API_BASE}/api/admin/products`;
 
       const res = await fetch(endpoint, {
         method: editProductId ? "PUT" : "POST",
@@ -184,6 +199,21 @@ export default function Admin({ user, token }) {
     }
   };
 
+  const updateOrderStatus = async (orderId, status) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/orders/${orderId}/status`, {
+        method: "PUT",
+        headers: authHeaders,
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Unable to update order status.");
+      await fetchAdminData();
+    } catch (err) {
+      setError(err.message || "Unable to update order status.");
+    }
+  };
+
   return (
     <section className="max-w-6xl mx-auto px-4 py-8">
       <div className="bg-white/90 rounded-2xl shadow-lg p-6">
@@ -194,11 +224,7 @@ export default function Admin({ user, token }) {
               Welcome, {user?.name || "Admin"} ({user?.email || "authorized user"}).
             </p>
           </div>
-          <button
-            onClick={fetchAdminData}
-            className="bg-black hover:bg-gray-900 text-white px-4 py-2 rounded-lg shadow text-sm"
-            disabled={loading}
-          >
+          <button onClick={fetchAdminData} className="bg-black hover:bg-gray-900 text-white px-4 py-2 rounded-lg shadow text-sm" disabled={loading}>
             {loading ? "Loading..." : "Refresh"}
           </button>
         </div>
@@ -216,15 +242,78 @@ export default function Admin({ user, token }) {
               <p className="text-sm text-green-700 mt-1">{serverMessage}</p>
             </div>
 
+            <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="rounded-xl border bg-white p-4">
+                <p className="text-sm text-gray-500">Total orders</p>
+                <p className="text-2xl font-bold text-gray-900">{orderStats.totalOrders}</p>
+              </div>
+              <div className="rounded-xl border bg-white p-4">
+                <p className="text-sm text-gray-500">Revenue</p>
+                <p className="text-2xl font-bold text-gray-900">Rs {orderStats.totalRevenue}</p>
+              </div>
+              <div className="rounded-xl border bg-white p-4">
+                <p className="text-sm text-gray-500">Pending orders</p>
+                <p className="text-2xl font-bold text-gray-900">{orderStats.pendingOrders}</p>
+              </div>
+              <div className="rounded-xl border bg-white p-4">
+                <p className="text-sm text-gray-500">Delivered orders</p>
+                <p className="text-2xl font-bold text-gray-900">{orderStats.deliveredOrders}</p>
+              </div>
+            </div>
+
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="rounded-xl border bg-white p-4">
                 <p className="text-sm text-gray-500">Total users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
+                <p className="text-2xl font-bold text-gray-900">{userStats.totalUsers}</p>
               </div>
               <div className="rounded-xl border bg-white p-4">
                 <p className="text-sm text-gray-500">Admin users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalAdmins}</p>
+                <p className="text-2xl font-bold text-gray-900">{userStats.totalAdmins}</p>
               </div>
+            </div>
+
+            <div className="mt-8 rounded-xl border bg-white p-4 overflow-auto">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Order Management</h2>
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50 text-left">
+                  <tr>
+                    <th className="px-3 py-2">Order ID</th>
+                    <th className="px-3 py-2">Customer</th>
+                    <th className="px-3 py-2">Items</th>
+                    <th className="px-3 py-2">Amount</th>
+                    <th className="px-3 py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order) => (
+                    <tr key={order.id} className="border-t align-top">
+                      <td className="px-3 py-2 text-xs">{order.id}</td>
+                      <td className="px-3 py-2">
+                        <div className="font-medium">{order.customerName}</div>
+                        <div className="text-xs text-gray-500">{order.customerPhone}</div>
+                      </td>
+                      <td className="px-3 py-2 text-xs">
+                        {(order.items || []).map((item) => `${item.title} x${item.quantity}`).join(", ")}
+                      </td>
+                      <td className="px-3 py-2">Rs {order.totalAmount}</td>
+                      <td className="px-3 py-2">
+                        <select
+                          className="border rounded px-2 py-1"
+                          value={order.status}
+                          onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                        >
+                          {ORDER_STATUSES.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {orders.length === 0 && <p className="text-sm text-gray-500 mt-3">No online orders yet.</p>}
             </div>
 
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -270,13 +359,7 @@ export default function Admin({ user, token }) {
                   />
 
                   <div className="flex items-center gap-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={uploadImageFile}
-                      className="hidden"
-                    />
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={uploadImageFile} className="hidden" />
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
@@ -304,19 +387,11 @@ export default function Admin({ user, token }) {
                   </label>
 
                   <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg"
-                      disabled={saving}
-                    >
+                    <button type="submit" className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg" disabled={saving}>
                       {saving ? "Saving..." : editProductId ? "Update Product" : "Add Product"}
                     </button>
                     {editProductId && (
-                      <button
-                        type="button"
-                        onClick={resetForm}
-                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg"
-                      >
+                      <button type="button" onClick={resetForm} className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg">
                         Cancel Edit
                       </button>
                     )}
@@ -343,26 +418,14 @@ export default function Admin({ user, token }) {
                         <td className="px-3 py-2">{product.category}</td>
                         <td className="px-3 py-2">Rs {product.price}</td>
                         <td className="px-3 py-2">
-                          <input
-                            type="checkbox"
-                            checked={product.available !== false}
-                            onChange={() => toggleAvailability(product)}
-                          />
+                          <input type="checkbox" checked={product.available !== false} onChange={() => toggleAvailability(product)} />
                         </td>
                         <td className="px-3 py-2">
                           <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => startEditProduct(product)}
-                              className="text-blue-700 hover:underline"
-                            >
+                            <button type="button" onClick={() => startEditProduct(product)} className="text-blue-700 hover:underline">
                               Edit
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => removeProduct(product.id)}
-                              className="text-red-700 hover:underline"
-                            >
+                            <button type="button" onClick={() => removeProduct(product.id)} className="text-red-700 hover:underline">
                               Delete
                             </button>
                           </div>

@@ -63,7 +63,14 @@ export default function App() {
     home: <Home addToCart={addToCart} />,
     order: <Order addToCart={addToCart} />,
     contact: <Contact />,
-    cart: <Cart cart={cart} removeFromCart={removeFromCart} clearCart={clearCart} />,
+    cart: (
+      <Cart
+        cart={cart}
+        removeFromCart={removeFromCart}
+        clearCart={clearCart}
+        auth={auth}
+      />
+    ),
     login: <Login onAuthSuccess={handleAuthSuccess} />,
     admin: isAdmin ? <Admin user={auth?.user} token={auth?.token} /> : <Home addToCart={addToCart} />,
   };
