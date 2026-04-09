@@ -41,44 +41,50 @@ body {
 
 .jazak-corner {
   position: absolute;
-  top: 4px;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: clamp(1.65rem, 2.2vw, 2.2rem);
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.015em;
+  white-space: nowrap;
+  color: #b88914;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+  z-index: 30;
+}
+
+.jazak-mobile {
+  position: absolute;
+  top: 6px;
   left: 10px;
   font-size: 0.72rem;
   line-height: 1;
-  font-weight: 900;
-  letter-spacing: 0.03em;
-  background: linear-gradient(100deg, #6e4f10 0%, #d4af37 35%, #fff1a8 50%, #d4af37 65%, #6e4f10 100%);
-  background-size: 250% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
-  animation: jazakShimmer 3.4s linear infinite;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: #b88914;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
   pointer-events: none;
   z-index: 60;
 }
 
-.bismillah-nav-center {
-  text-align: center;
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  text-transform: uppercase;
-  white-space: nowrap;
-  background: linear-gradient(90deg, #7a5710 0%, #c9971d 25%, #ffe08a 50%, #c9971d 75%, #7a5710 100%);
-  background-size: 220% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 8px rgba(212, 175, 55, 0.45), 0 0 16px rgba(212, 175, 55, 0.28);
-  animation: bismillahGlow 2.8s ease-in-out infinite, bismillahShine 4.2s linear infinite;
-  pointer-events: none;
+@media (max-width: 1024px) {
+  .jazak-corner {
+    font-size: 1.35rem;
+  }
 }
 
-@media (min-width: 768px) {
-  .bismillah-nav-center {
-    font-size: 0.78rem;
+.nav-row {
+  min-height: 84px;
+  position: relative;
+  z-index: 20;
+}
+
+@media (max-width: 767px) {
+  .nav-row {
+    min-height: auto;
   }
 }
 
@@ -103,27 +109,6 @@ body {
 }
 
 @keyframes jazakShimmer {
-  from {
-    background-position: 0% center;
-  }
-  to {
-    background-position: 200% center;
-  }
-}
-
-@keyframes bismillahGlow {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 0 rgba(255, 215, 120, 0.2));
-    transform: translateY(0);
-  }
-  50% {
-    filter: drop-shadow(0 0 6px rgba(255, 215, 120, 0.45));
-    transform: translateY(-1px);
-  }
-}
-
-@keyframes bismillahShine {
   from {
     background-position: 0% center;
   }

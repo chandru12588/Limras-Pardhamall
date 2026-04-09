@@ -7,34 +7,31 @@ export default function Navbar({ setCurrentPage, cartCount = 0, auth, isAdmin = 
 
   return (
     <nav className="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50 relative">
-      <div className="jazak-corner" aria-label="Blessing text">
+      <div className="jazak-mobile md:hidden" aria-label="Blessing text">
         Jazaka Allahu Khairan
       </div>
-      <div className="max-w-7xl mx-auto px-4 py-3">
-        <div className="flex items-center justify-between md:grid md:grid-cols-[auto_1fr_auto] md:items-center md:gap-6">
-        <div
-          className="flex items-center gap-3 md:gap-4 cursor-pointer brand-block"
-          onClick={() => {
-            setCurrentPage("home");
-            setMenuOpen(false);
-          }}
-        >
-          <img
-            src={logo}
-            alt="Limras Pardha Mall Logo"
-            className="h-14 w-14 md:h-20 md:w-20 object-contain rounded-full brand-logo"
-          />
-          <div className="leading-tight">
-            <div className="text-xl md:text-3xl font-extrabold tracking-wide brand-title">Limras</div>
-            <div className="text-sm md:text-base text-green-700 font-semibold brand-subtitle">Pardha Mall</div>
+      <div className="hidden md:block jazak-corner" aria-label="Blessing text">
+        Jazaka Allahu Khairan
+      </div>
+      <div className="max-w-7xl mx-auto px-4 py-3 relative">
+        <div className="flex items-center justify-between nav-row">
+          <div
+            className="flex items-center gap-3 md:gap-4 cursor-pointer brand-block"
+            onClick={() => {
+              setCurrentPage("home");
+              setMenuOpen(false);
+            }}
+          >
+            <img
+              src={logo}
+              alt="Limras Pardha Mall Logo"
+              className="h-14 w-14 md:h-20 md:w-20 object-contain rounded-full brand-logo"
+            />
+            <div className="leading-tight">
+              <div className="text-xl md:text-3xl font-extrabold tracking-wide brand-title">Limras</div>
+              <div className="text-sm md:text-base text-green-700 font-semibold brand-subtitle">Pardha Mall</div>
+            </div>
           </div>
-        </div>
-
-        <div className="hidden md:flex justify-center">
-          <div className="bismillah-nav-center" aria-label="Center blessing text">
-            Bismillahir Rahmanir Rahim
-          </div>
-        </div>
 
         <div className="flex items-center gap-4 md:justify-self-end">
           <div className="hidden md:flex gap-6 text-base font-medium">
