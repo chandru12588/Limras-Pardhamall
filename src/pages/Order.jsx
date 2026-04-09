@@ -42,7 +42,7 @@ export default function Order({ addToCart }) {
       {!loading && !error && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 place-items-center">
           {products.map((product) => (
-            <div key={product.id} className="w-[320px]">
+            <div key={product.id} className="w-full max-w-[320px]">
               <ProductCard product={product} addToCart={addToCart} />
             </div>
           ))}

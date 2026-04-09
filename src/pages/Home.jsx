@@ -53,7 +53,7 @@ export default function Home({ addToCart }) {
   const renderGrid = (items) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center place-items-center">
       {items.map((product) => (
-        <div key={product.id} className="w-[320px]">
+        <div key={product.id} className="w-full max-w-[320px]">
           <ProductCard product={product} addToCart={addToCart} />
         </div>
       ))}

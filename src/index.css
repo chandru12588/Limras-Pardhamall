@@ -15,6 +15,69 @@ body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Brand visibility and animation */
+.brand-block {
+  transition: transform 180ms ease;
+}
+
+.brand-block:hover {
+  transform: translateY(-1px);
+}
+
+.brand-logo {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
+  animation: logoFloat 3.4s ease-in-out infinite;
+}
+
+.brand-title {
+  color: #111827;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  animation: brandPulse 2.8s ease-in-out infinite;
+}
+
+.brand-subtitle {
+  letter-spacing: 0.02em;
+}
+
+@keyframes logoFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes brandPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+/* Hand cursor for clickable controls across the website */
+a[href],
+button,
+[role="button"],
+summary,
+label[for],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+  cursor: not-allowed;
+}
+
 /* Global interactive feel across website */
 a,
 button,
@@ -63,11 +126,24 @@ textarea:focus {
 .card-shadow {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   transition: transform 180ms ease, box-shadow 180ms ease;
+  cursor: pointer;
 }
 
 .card-shadow:hover {
   transform: translateY(-4px);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.14);
+}
+
+/* Hover/click feedback for cards, tables, and form blocks */
+.card-shadow,
+table tbody tr,
+.rounded-xl,
+.shadow {
+  transition: box-shadow 180ms ease, transform 180ms ease, background-color 180ms ease;
+}
+
+table tbody tr:hover {
+  background-color: rgba(22, 163, 74, 0.06);
 }
 
 .nav-sticky {
