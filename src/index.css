@@ -39,6 +39,47 @@ body {
   letter-spacing: 0.02em;
 }
 
+.jazak-corner {
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  background: linear-gradient(100deg, #6e4f10 0%, #d4af37 35%, #fff1a8 50%, #d4af37 65%, #6e4f10 100%);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
+  animation: jazakShimmer 3.4s linear infinite;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.bismillah-premium {
+  margin-top: 2px;
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #7a5710 0%, #c9971d 25%, #ffe08a 50%, #c9971d 75%, #7a5710 100%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.45), 0 0 16px rgba(212, 175, 55, 0.28);
+  animation: bismillahGlow 2.8s ease-in-out infinite, bismillahShine 4.2s linear infinite;
+}
+
+@media (min-width: 768px) {
+  .bismillah-premium {
+    font-size: 0.78rem;
+  }
+}
+
 @keyframes logoFloat {
   0%,
   100% {
@@ -56,6 +97,36 @@ body {
   }
   50% {
     opacity: 0.85;
+  }
+}
+
+@keyframes jazakShimmer {
+  from {
+    background-position: 0% center;
+  }
+  to {
+    background-position: 200% center;
+  }
+}
+
+@keyframes bismillahGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 rgba(255, 215, 120, 0.2));
+    transform: translateY(0);
+  }
+  50% {
+    filter: drop-shadow(0 0 6px rgba(255, 215, 120, 0.45));
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes bismillahShine {
+  from {
+    background-position: 0% center;
+  }
+  to {
+    background-position: 200% center;
   }
 }
 
