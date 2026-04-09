@@ -10,6 +10,9 @@ export default function Navbar({ setCurrentPage, cartCount = 0, auth, isAdmin = 
       <div className="jazak-corner" aria-label="Blessing text">
         Jazaka Allahu Khairan
       </div>
+      <div className="bismillah-nav-center" aria-label="Center blessing text">
+        Bismillahir Rahmanir Rahim
+      </div>
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
         <div
           className="flex items-center gap-3 md:gap-4 cursor-pointer brand-block"
@@ -25,7 +28,6 @@ export default function Navbar({ setCurrentPage, cartCount = 0, auth, isAdmin = 
           />
           <div className="leading-tight">
             <div className="text-xl md:text-3xl font-extrabold tracking-wide brand-title">Limras</div>
-            <div className="bismillah-premium">Bismillahir Rahmanir Rahim</div>
             <div className="text-sm md:text-base text-green-700 font-semibold brand-subtitle">Pardha Mall</div>
           </div>
         </div>
